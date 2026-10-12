@@ -4,7 +4,7 @@ import { ChatComposer } from '../chat/ChatComposer';
 import { ModelSelector } from '../chat/ModelSelector';
 import { AgentActivity } from '../chat/AgentActivity';
 import { Button } from '../ui/Button';
-import { Bot, PanelLeftClose, MessageSquare } from 'lucide-react';
+import { Bot, PanelLeftClose, MessageSquare, Swords } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { sendMessageStream } from '@/lib/api';
 
@@ -16,6 +16,8 @@ export function ChatPanel() {
     updateMessage,
     sidebarVisible,
     setSidebarVisible,
+    setSelfHealingAgentModalOpen,
+    setModelArenaOpen,
   } = useAppStore();
 
   const [prefillPrompt, setPrefillPrompt] = useState('');
@@ -103,7 +105,23 @@ export function ChatPanel() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setSelfHealingAgentModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-all shadow-sm cursor-pointer"
+            title="Spustit Autonomního Self-Healing Agenta"
+          >
+            <Bot className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline font-semibold">Agent</span>
+          </button>
+          <button
+            onClick={() => setModelArenaOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all shadow-sm cursor-pointer"
+            title="Spustit AI Model Arenu (Souboj modelů vedle sebe)"
+          >
+            <Swords className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline font-semibold">Arena</span>
+          </button>
           <ModelSelector />
         </div>
       </div>

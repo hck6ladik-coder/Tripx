@@ -14,7 +14,10 @@ import {
   Loader2,
   FolderCheck,
   Sparkles,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { useTextToSpeech } from '@/hooks/useSpeech';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -57,6 +60,7 @@ export function ChatMessage({ message, onRegenerate }: ChatMessageProps) {
   const [batchSaving, setBatchSaving] = useState(false);
   const [showThink, setShowThink] = useState(false);
   const { createLocalFile } = useAppStore();
+  const { isSpeaking, speak, stop: stopSpeaking } = useTextToSpeech();
 
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -286,6 +290,25 @@ export function ChatMessage({ message, onRegenerate }: ChatMessageProps) {
                   <Copy className="w-3.5 h-3.5" />
                 )}
                 {copied ? 'Zkopírováno' : 'Kopírovat'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (isSpeaking) {
+                    stopSpeaking();
+                  } else {
+                    speak(displayContent || message.content);
+                  }
+                }}
+                className={cn(isSpeaking && 'text-purple-400 bg-purple-500/10 animate-pulse')}
+              >
+                {isSpeaking ? (
+                  <VolumeX className="w-3.5 h-3.5 text-purple-400" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5" />
+                )}
+                {isSpeaking ? 'Zastavit čtení' : 'Přečíst'}
               </Button>
               {onRegenerate && (
                 <Button variant="ghost" size="sm" onClick={onRegenerate}>

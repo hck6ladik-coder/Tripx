@@ -14,7 +14,10 @@ import {
   ChevronDown,
   X,
   FileText,
+  Mic,
+  MicOff,
 } from 'lucide-react';
+import { useSpeechToText } from '@/hooks/useSpeech';
 import { AGENT_MODES } from '@/lib/constants';
 
 interface ChatComposerProps {
@@ -39,6 +42,16 @@ export function ChatComposer({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const contentRef = useRef('');
+
+  // Voice speech-to-text
+  const { isListening, toggleListening, error: speechError } = useSpeechToText((transcriptText) => {
+    if (transcriptText) {
+      setInput((prev) => {
+        const spacer = prev && !prev.endsWith(' ') ? ' ' : '';
+        return prev + spacer + transcriptText;
+      });
+    }
+  });
 
   useEffect(() => {
     if (prefill) {
@@ -330,6 +343,19 @@ export function ChatComposer({
               onClick={() => setShowCommands(!showCommands)}
             >
               <Command className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              className={cn(
+                'p-1.5 rounded-lg transition-all relative',
+                isListening
+                  ? 'text-red-400 bg-red-500/20 animate-pulse ring-2 ring-red-500/50'
+                  : 'text-text-secondary hover:text-accent hover:bg-surface-elevated'
+              )}
+              title={isListening ? 'Zastavit nahrávání hlasu (mluvíte česky)' : 'Mluvit do chatu (Hlasový vstup v češtině)'}
+              onClick={toggleListening}
+            >
+              {isListening ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
             </button>
           </div>
 

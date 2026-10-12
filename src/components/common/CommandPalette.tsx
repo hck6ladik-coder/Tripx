@@ -8,6 +8,8 @@ import {
   Terminal,
   FolderOpen,
   Settings,
+  Bot,
+  Swords,
 } from 'lucide-react';
 
 const commands = [
@@ -42,6 +44,18 @@ const commands = [
     shortcut: 'Ctrl+,',
   },
   {
+    id: 'self-healing-agent',
+    label: 'Autonomní Self-Healing Agent',
+    icon: <Bot className="w-4 h-4 text-purple-400" />,
+    shortcut: 'Ctrl+Shift+A',
+  },
+  {
+    id: 'model-arena',
+    label: 'AI Model Arena (Souboj modelů)',
+    icon: <Swords className="w-4 h-4 text-amber-400" />,
+    shortcut: 'Ctrl+Shift+M',
+  },
+  {
     id: 'toggle-sidebar',
     label: 'Přepnout sidebar',
     icon: <MessageSquare className="w-4 h-4" />,
@@ -57,6 +71,8 @@ export function CommandPalette() {
     addTerminal,
     setSidebarVisible,
     sidebarVisible,
+    setSelfHealingAgentModalOpen,
+    setModelArenaOpen,
   } = useAppStore();
 
   const [search, setSearch] = useState('');
@@ -94,6 +110,12 @@ export function CommandPalette() {
         break;
       case 'toggle-sidebar':
         setSidebarVisible(!sidebarVisible);
+        break;
+      case 'self-healing-agent':
+        setSelfHealingAgentModalOpen(true);
+        break;
+      case 'model-arena':
+        setModelArenaOpen(true);
         break;
     }
     setCommandPaletteOpen(false);

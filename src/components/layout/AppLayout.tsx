@@ -11,6 +11,9 @@ import { ToastContainer } from '../ui/Toast';
 import { LoadingLockScreen } from '../common/LoadingLockScreen';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { SelfHealingAgentModal } from '../agent/SelfHealingAgentModal';
+import { ModelArenaModal } from '../arena/ModelArenaModal';
+
 export function AppLayout() {
   const { settings, sidebarVisible } = useAppStore();
 
@@ -87,6 +90,8 @@ export function AppLayout() {
       <SettingsModal />
       <ToastContainer />
       <LoadingLockScreen />
+      <SelfHealingAgentModal />
+      <ModelArenaModal />
     </div>
   );
 }

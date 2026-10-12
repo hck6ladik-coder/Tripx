@@ -74,6 +74,10 @@ interface AppState {
   settingsModalOpen: boolean;
   settingsModalTab: 'ai' | 'editor' | 'workspace' | 'memory';
   setSettingsModalOpen: (open: boolean, tab?: 'ai' | 'editor' | 'workspace' | 'memory') => void;
+  selfHealingAgentModalOpen: boolean;
+  setSelfHealingAgentModalOpen: (open: boolean) => void;
+  modelArenaOpen: boolean;
+  setModelArenaOpen: (open: boolean) => void;
   sidebarVisible: boolean;
   setSidebarVisible: (visible: boolean) => void;
   loadLocalFolder: (folderName: string, files: FileNode[]) => void;
@@ -522,6 +526,12 @@ export const useAppStore = create<AppState>()(
           settingsModalOpen: open,
           settingsModalTab: tab || state.settingsModalTab,
         })),
+
+      selfHealingAgentModalOpen: false,
+      setSelfHealingAgentModalOpen: (open) => set({ selfHealingAgentModalOpen: open }),
+
+      modelArenaOpen: false,
+      setModelArenaOpen: (open) => set({ modelArenaOpen: open }),
 
       sidebarVisible: true,
       setSidebarVisible: (visible) => set({ sidebarVisible: visible }),
