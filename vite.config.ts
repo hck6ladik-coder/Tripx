@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import { exec } from 'child_process';
 
 function codeSpaceBackendPlugin(): Plugin {
   const FCC_URL = 'http://127.0.0.1:8082';
@@ -522,6 +523,51 @@ Máte dvě možnosti:
               fs.writeFileSync(resolvedPath, content ?? '', 'utf-8');
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: true, path: resolvedPath }));
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        // 5. TERMINAL EXEC API
+        if (url.startsWith('/api/terminal/exec') && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk;
+          });
+          req.on('end', () => {
+            try {
+              const { command, cwd } = JSON.parse(body || '{}');
+              if (!command || !command.trim()) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Chybí příkaz' }));
+                return;
+              }
+
+              const workspaceRoot = path.resolve(__dirname, '..');
+              const targetDir = cwd && fs.existsSync(cwd) ? cwd : workspaceRoot;
+
+              exec(
+                command,
+                {
+                  cwd: targetDir,
+                  shell: 'powershell.exe',
+                  maxBuffer: 10 * 1024 * 1024,
+                  timeout: 60000,
+                },
+                (error, stdout, stderr) => {
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(
+                    JSON.stringify({
+                      stdout: stdout || '',
+                      stderr: stderr || (error ? error.message : ''),
+                      exitCode: error && error.code ? error.code : 0,
+                    })
+                  );
+                }
+              );
             } catch (err: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));

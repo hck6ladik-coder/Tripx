@@ -457,3 +457,23 @@ export function createTerminalWebSocket(_terminalId: string): WebSocket {
 
   return mockWS;
 }
+
+export async function executeTerminalCommand(
+  command: string,
+  cwd?: string
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  try {
+    const res = await fetch('/api/terminal/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command, cwd }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Chyba serveru' }));
+      return { stdout: '', stderr: err.error || 'Chyba při spuštění příkazu', exitCode: 1 };
+    }
+    return await res.json();
+  } catch (err: any) {
+    return { stdout: '', stderr: err.message || 'Chyba spojení s terminálem', exitCode: 1 };
+  }
+}

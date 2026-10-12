@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { ChatMessage, AgentMode, Attachment } from '@/types';
 import { generateId, cn } from '@/lib/utils';
@@ -19,9 +19,15 @@ import { AGENT_MODES } from '@/lib/constants';
 
 interface ChatComposerProps {
   conversationId?: string;
+  prefill?: string;
+  onClearPrefill?: () => void;
 }
 
-export function ChatComposer({ conversationId }: ChatComposerProps) {
+export function ChatComposer({
+  conversationId,
+  prefill,
+  onClearPrefill,
+}: ChatComposerProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
@@ -33,6 +39,16 @@ export function ChatComposer({ conversationId }: ChatComposerProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const contentRef = useRef('');
+
+  useEffect(() => {
+    if (prefill) {
+      setInput(prefill);
+      onClearPrefill?.();
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
+    }
+  }, [prefill, onClearPrefill]);
 
   const {
     conversations,

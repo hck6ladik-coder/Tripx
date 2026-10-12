@@ -5,17 +5,20 @@ import { ModelSelector } from '../chat/ModelSelector';
 import { AgentActivity } from '../chat/AgentActivity';
 import { Button } from '../ui/Button';
 import { Bot, PanelLeftClose, MessageSquare } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { sendMessageStream } from '@/lib/api';
 
 export function ChatPanel() {
   const {
     conversations,
     activeConversationId,
     createConversation,
+    updateMessage,
     sidebarVisible,
     setSidebarVisible,
   } = useAppStore();
 
+  const [prefillPrompt, setPrefillPrompt] = useState('');
   const conversation = conversations.find(
     (c) => c.id === activeConversationId
   );
@@ -26,6 +29,58 @@ export function ChatPanel() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [conversation?.messages.length, conversation?.messages[conversation?.messages.length - 1]?.content]);
+
+  const handleSelectPrompt = (promptText: string) => {
+    if (!activeConversationId || !conversation) {
+      createConversation();
+    }
+    setPrefillPrompt(promptText);
+  };
+
+  const handleRegenerate = async () => {
+    if (!conversation || conversation.messages.length < 2) return;
+    const lastMsg = conversation.messages[conversation.messages.length - 1];
+    if (lastMsg.role !== 'assistant') return;
+
+    // Find preceding user message
+    const userMsg = conversation.messages[conversation.messages.length - 2];
+    if (!userMsg || userMsg.role !== 'user') return;
+
+    updateMessage(conversation.id, lastMsg.id, {
+      content: '',
+      streaming: true,
+      error: undefined,
+      agentStatus: 'thinking',
+    });
+
+    let currentContent = '';
+    await sendMessageStream(conversation, userMsg, {
+      onChunk: (chunk) => {
+        currentContent += chunk;
+        updateMessage(conversation.id, lastMsg.id, {
+          content: currentContent,
+        });
+      },
+      onStatusChange: (status) => {
+        updateMessage(conversation.id, lastMsg.id, {
+          agentStatus: status as any,
+        });
+      },
+      onComplete: () => {
+        updateMessage(conversation.id, lastMsg.id, {
+          streaming: false,
+          agentStatus: 'completed',
+        });
+      },
+      onError: (err) => {
+        updateMessage(conversation.id, lastMsg.id, {
+          streaming: false,
+          error: err,
+          agentStatus: 'failed',
+        });
+      },
+    });
+  };
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -57,8 +112,16 @@ export function ChatPanel() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {conversation && conversation.messages.length > 0 ? (
           <div className="divide-y divide-border/50">
-            {conversation.messages.map((message) => (
-              <ChatMessageComponent key={message.id} message={message} />
+            {conversation.messages.map((message, idx) => (
+              <ChatMessageComponent
+                key={message.id}
+                message={message}
+                onRegenerate={
+                  message.role === 'assistant' && idx === conversation.messages.length - 1
+                    ? handleRegenerate
+                    : undefined
+                }
+              />
             ))}
             {conversation.messages[conversation.messages.length - 1]
               ?.agentStatus &&
@@ -75,19 +138,27 @@ export function ChatPanel() {
               )}
           </div>
         ) : (
-          <EmptyChatState onNewChat={() => createConversation()} />
+          <EmptyChatState onSelectPrompt={handleSelectPrompt} />
         )}
       </div>
 
       {/* Composer */}
       <div className="border-t border-border p-4">
-        <ChatComposer conversationId={conversation?.id} />
+        <ChatComposer
+          conversationId={conversation?.id}
+          prefill={prefillPrompt}
+          onClearPrefill={() => setPrefillPrompt('')}
+        />
       </div>
     </div>
   );
 }
 
-function EmptyChatState({ onNewChat }: { onNewChat: () => void }) {
+function EmptyChatState({
+  onSelectPrompt,
+}: {
+  onSelectPrompt: (text: string) => void;
+}) {
   return (
     <div className="h-full flex flex-col items-center justify-center p-8 text-center">
       <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
@@ -101,18 +172,34 @@ function EmptyChatState({ onNewChat }: { onNewChat: () => void }) {
         úkol upravit váš kód.
       </p>
       <div className="grid grid-cols-1 gap-2 w-full max-w-sm">
-        <SuggestionButton text="Vytvoř moderní přihlašovací stránku." />
-        <SuggestionButton text="Vysvětli mi React hooks" />
-        <SuggestionButton text="Refactoruj tento kód na TypeScript" />
+        <SuggestionButton
+          text="Vytvoř moderní přihlašovací stránku."
+          onClick={() => onSelectPrompt('Vytvoř moderní přihlašovací stránku.')}
+        />
+        <SuggestionButton
+          text="Vysvětli mi React hooks"
+          onClick={() => onSelectPrompt('Vysvětli mi React hooks')}
+        />
+        <SuggestionButton
+          text="Refactoruj tento kód na TypeScript"
+          onClick={() => onSelectPrompt('Refactoruj tento kód na TypeScript')}
+        />
       </div>
     </div>
   );
 }
 
-function SuggestionButton({ text }: { text: string }) {
+function SuggestionButton({
+  text,
+  onClick,
+}: {
+  text: string;
+  onClick: () => void;
+}) {
   return (
     <button
-      className="px-4 py-3 text-left text-sm text-text-secondary bg-surface border border-border rounded-lg hover:border-accent/50 hover:text-text-primary transition-all"
+      onClick={onClick}
+      className="px-4 py-3 text-left text-sm text-text-secondary bg-surface border border-border rounded-lg hover:border-accent/50 hover:text-text-primary transition-all cursor-pointer"
     >
       {text}
     </button>

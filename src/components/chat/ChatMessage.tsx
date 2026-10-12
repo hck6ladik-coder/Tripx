@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Loader2,
   FolderCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +25,7 @@ import { useAppStore } from '@/store/useAppStore';
 
 interface ChatMessageProps {
   message: ChatMessageType;
+  onRegenerate?: () => void;
 }
 
 function extractFilePath(code: string, language: string): { filePath: string | null; cleanCode: string } {
@@ -49,10 +51,11 @@ function extractFilePath(code: string, language: string): { filePath: string | n
   return { filePath: null, cleanCode: code };
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, onRegenerate }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
   const [batchSaving, setBatchSaving] = useState(false);
+  const [showThink, setShowThink] = useState(false);
   const { createLocalFile } = useAppStore();
 
   const copyToClipboard = async (text: string) => {
@@ -60,6 +63,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Extract <think> reasoning if present
+  let thinkContent = '';
+  let displayContent = message.content || '';
+  if (!isUser && displayContent.includes('<think>')) {
+    const thinkMatch = displayContent.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+    if (thinkMatch) {
+      thinkContent = thinkMatch[1].trim();
+      displayContent = displayContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/i, '').trim();
+    }
+  }
 
   // Find all file paths detected in code blocks
   const detectedFiles: { path: string; code: string }[] = [];
@@ -178,6 +192,27 @@ export function ChatMessage({ message }: ChatMessageProps) {
             </p>
           ) : (
             <div className="prose-chat">
+              {thinkContent && (
+                <div className="mb-3 rounded-xl border border-purple-500/30 bg-purple-500/5 overflow-hidden shadow-sm">
+                  <button
+                    onClick={() => setShowThink(!showThink)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-purple-300 hover:bg-purple-500/10 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Myšlenkový pochod modelu (Reasoning)</span>
+                    </span>
+                    <span className="text-[11px] text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded">
+                      {showThink ? 'Skrýt ▲' : 'Zobrazit ▼'}
+                    </span>
+                  </button>
+                  {showThink && (
+                    <div className="px-3.5 py-2.5 border-t border-purple-500/20 text-xs text-text-secondary whitespace-pre-wrap font-mono leading-relaxed bg-black/30 max-h-80 overflow-y-auto">
+                      {thinkContent}
+                    </div>
+                  )}
+                </div>
+              )}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -211,7 +246,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   },
                 }}
               >
-                {message.content}
+                {displayContent}
               </ReactMarkdown>
             </div>
           )}
@@ -252,10 +287,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 )}
                 {copied ? 'Zkopírováno' : 'Kopírovat'}
               </Button>
-              <Button variant="ghost" size="sm">
-                <RotateCcw className="w-3.5 h-3.5" />
-                Znovu
-              </Button>
+              {onRegenerate && (
+                <Button variant="ghost" size="sm" onClick={onRegenerate}>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Znovu
+                </Button>
+              )}
             </div>
           )}
 
