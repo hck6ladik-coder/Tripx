@@ -57,7 +57,7 @@ function codeSpaceBackendPlugin(): Plugin {
               const data = JSON.parse(body || '{}');
               const {
                 provider = 'fcc',
-                model = 'claude-3-5-sonnet-20241022',
+                model = 'claude-sonnet-4-20250514',
                 messages = [],
                 apiKey = '',
                 endpoint = '',
@@ -106,15 +106,15 @@ function codeSpaceBackendPlugin(): Plugin {
                 }
 
                 // Clean and normalize model name for fcc-server
-                let targetModel = model || 'claude-3-5-sonnet-20241022';
+                let targetModel = model || 'claude-sonnet-4-20250514';
                 if (targetModel.includes('fcc/')) {
                   targetModel = targetModel.replace(/^fcc\//, '');
                 } else if (targetModel.toLowerCase().includes('nemotron')) {
-                  targetModel = 'claude-3-5-sonnet-20241022';
+                  targetModel = 'claude-sonnet-4-20250514';
                 } else if (targetModel.toLowerCase().includes('kimi')) {
-                  targetModel = 'claude-3-5-sonnet-20241022';
+                  targetModel = 'claude-sonnet-4-20250514';
                 } else if (!targetModel.startsWith('claude-') && !targetModel.startsWith('anthropic/')) {
-                  targetModel = 'claude-3-5-sonnet-20241022';
+                  targetModel = 'claude-sonnet-4-20250514';
                 }
 
                 const fccResponse = await fetch(`${FCC_URL}/v1/messages`, {
@@ -125,7 +125,7 @@ function codeSpaceBackendPlugin(): Plugin {
                     'anthropic-version': '2023-06-01',
                   },
                   body: JSON.stringify({
-                    model: targetModel || 'claude-3-5-sonnet-20241022',
+                    model: targetModel || 'claude-sonnet-4-20250514',
                     max_tokens: 4096,
                     system: systemPrompt || undefined,
                     messages: anthropicMessages,

@@ -38,7 +38,7 @@ export async function sendMessageStream(
       const selectedModel = useAppStore.getState().selectedModel;
 
       const providerId = conversation.providerId || selectedModel?.providerId || 'fcc';
-      const modelId = conversation.modelId || selectedModel?.id || 'fcc/claude-3-5-sonnet-20241022';
+      const modelId = conversation.modelId || selectedModel?.id || 'fcc/claude-sonnet-4-20250514';
 
       // Determine API key and endpoint based on provider
       let apiKey = '';
