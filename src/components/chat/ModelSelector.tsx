@@ -121,6 +121,7 @@ export function ModelSelector() {
                                 {model.capabilities.includes('vision') && '🖼️'}
                                 {model.capabilities.includes('tools') && '🛠️'}
                                 {model.capabilities.includes('coding') && '💻'}
+                                {model.capabilities.includes('reasoning') && '🧠'}
                               </span>
                             </div>
                           </div>

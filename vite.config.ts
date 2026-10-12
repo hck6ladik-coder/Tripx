@@ -109,12 +109,20 @@ function codeSpaceBackendPlugin(): Plugin {
                 let targetModel = model || 'claude-fable-5';
                 if (targetModel.includes('fcc/')) {
                   targetModel = targetModel.replace(/^fcc\//, '');
-                } else if (targetModel.toLowerCase().includes('nemotron')) {
-                  targetModel = 'claude-sonnet-4-20250514';
-                } else if (targetModel.toLowerCase().includes('kimi')) {
-                  targetModel = 'claude-sonnet-4-20250514';
+                }
+
+                let effectiveSystem = systemPrompt || '';
+                if (targetModel.includes('deepseek-r1')) {
+                  effectiveSystem = `[MÓD: DeepSeek R1 Reasoning Engine]\nJsi DeepSeek R1 – špičkový reasoning model specializovaný na hluboké logické uvažování krok za krokem, matematickou přesnost a detailní analýzu problému.\n\n` + effectiveSystem;
+                  targetModel = 'claude-fable-5';
+                } else if (targetModel.includes('deepseek-coder')) {
+                  effectiveSystem = `[MÓD: DeepSeek Coder Specialist]\nJsi DeepSeek Coder – elitní programátorský model zaměřený na čistý, vysoce optimalizovaný, modulární a robustní kód s důrazem na edge cases a best practices.\n\n` + effectiveSystem;
+                  targetModel = 'claude-fable-5';
+                } else if (targetModel.includes('qwen-coder') || targetModel.includes('qwen')) {
+                  effectiveSystem = `[MÓD: Qwen 2.5 Coder Full-Stack]\nJsi Qwen 2.5 Coder od Alibaby – expert na moderní webový i systémový full-stack vývoj, rychlé skriptování a architekturu aplikací.\n\n` + effectiveSystem;
+                  targetModel = 'claude-fable-5';
                 } else if (!targetModel.startsWith('claude-') && !targetModel.startsWith('anthropic/')) {
-                  targetModel = 'claude-sonnet-4-20250514';
+                  targetModel = 'claude-fable-5';
                 }
 
                 const fccResponse = await fetch(`${FCC_URL}/v1/messages`, {
@@ -127,7 +135,7 @@ function codeSpaceBackendPlugin(): Plugin {
                   body: JSON.stringify({
                     model: targetModel || 'claude-fable-5',
                     max_tokens: 4096,
-                    system: systemPrompt || undefined,
+                    system: effectiveSystem || undefined,
                     messages: anthropicMessages,
                     stream: true,
                     temperature: temperature ?? 0.7,
