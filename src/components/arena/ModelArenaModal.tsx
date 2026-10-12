@@ -276,6 +276,7 @@ export function ModelArenaModal() {
             model: candidate.modelId,
             messages: [{ role: 'user', content: prompt }],
             apiKeys: useAppStore.getState().settings.apiKeys || {},
+            fccEndpoint: useAppStore.getState().settings.fccEndpoint || 'http://127.0.0.1:8082',
           }),
         });
 

@@ -96,6 +96,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   },
   kimiEndpoint: 'https://api.moonshot.cn/v1',
   customEndpoint: 'http://localhost:8082',
+  fccEndpoint: 'http://127.0.0.1:8082',
   systemPrompt: '',
   temperature: 0.7,
 };

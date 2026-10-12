@@ -64,6 +64,9 @@ export function SettingsModal() {
   const [customEndpointForm, setCustomEndpointForm] = useState(
     settings.customEndpoint || 'http://localhost:8082'
   );
+  const [fccEndpointForm, setFccEndpointForm] = useState(
+    settings.fccEndpoint || 'http://127.0.0.1:8082'
+  );
 
   // Sync tab with external trigger
   useEffect(() => {
@@ -132,6 +135,7 @@ export function SettingsModal() {
       apiKeys: { ...settings.apiKeys, ...apiKeysForm },
       kimiEndpoint: kimiEndpointForm,
       customEndpoint: customEndpointForm,
+      fccEndpoint: fccEndpointForm,
     });
 
     addToast({
@@ -471,6 +475,22 @@ export function SettingsModal() {
                 >
                   {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-text-primary block mb-1">
+                  Sdílený fcc-server (bez klíče):
+                </label>
+                <input
+                  type="text"
+                  value={fccEndpointForm}
+                  onChange={(e) => setFccEndpointForm(e.target.value)}
+                  placeholder="např. https://fcc.tvojedomena.cz (prázdné = jen localhost)"
+                  className="w-full p-2.5 bg-surface border border-border rounded-xl text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent font-mono"
+                />
+                <p className="text-[11px] text-text-secondary mt-1">
+                  Veřejná adresa tvého fcc-serveru – kdokoliv s touto adresou v nastavení jede bez vlastního klíče.
+                </p>
               </div>
 
               {[

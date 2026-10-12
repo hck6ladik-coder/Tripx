@@ -178,6 +178,7 @@ Uživatel má přímo v rozhraní tlačítko "Uložit na disk", kterým soubor j
           apiKey,
           apiKeys: settings.apiKeys || {},
           endpoint,
+          fccEndpoint: settings.fccEndpoint || 'http://127.0.0.1:8082',
           temperature: settings.temperature ?? 0.7,
         }),
       });

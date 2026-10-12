@@ -62,13 +62,19 @@ function codeSpaceBackendPlugin(): Plugin {
                 messages = [],
                 apiKey = '',
                 endpoint = '',
+                fccEndpoint = '',
                 temperature = 0.7,
               } = data;
+
+              // FCC server: lokalni default, nebo sdilena vzdalena adresa z Nastaveni
+              const fccBase = String(
+                fccEndpoint || 'http://127.0.0.1:8082'
+              ).replace(/\/+$/, '');
 
               // Check if local FCC-SERVER (free-claude-code) is reachable
               let fccAvailable = false;
               try {
-                const check = await fetch(`${FCC_URL}/health`, { signal: AbortSignal.timeout(1000) });
+                const check = await fetch(`${fccBase}/health`, { signal: AbortSignal.timeout(1000) });
                 fccAvailable = check.ok;
               } catch {
                 fccAvailable = false;
@@ -126,7 +132,7 @@ function codeSpaceBackendPlugin(): Plugin {
                   targetModel = 'claude-fable-5';
                 }
 
-                const fccResponse = await fetch(`${FCC_URL}/v1/messages`, {
+                const fccResponse = await fetch(`${fccBase}/v1/messages`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

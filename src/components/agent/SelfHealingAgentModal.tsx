@@ -127,6 +127,7 @@ ${output1}
           model: 'claude-fable-5',
           messages: [{ role: 'user', content: agentPrompt }],
           apiKeys: useAppStore.getState().settings.apiKeys || {},
+          fccEndpoint: useAppStore.getState().settings.fccEndpoint || 'http://127.0.0.1:8082',
         }),
       });
 

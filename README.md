@@ -152,6 +152,24 @@ Ano — stačí vložit **svůj vlastní klíč** a chat funguje všude, i když
 
 Pořadí priorit: klíč z Nastavení v UI → Environment Variable na serveru. Přímé volání Anthropic API není podporováno – použijte ZenMux nebo OpenRouter.
 
+### 🌍 Sdílený fcc-server (kdokoliv bez klíče)
+
+Chceš, aby se kdokoliv připojil na dálku a nemusel zadávat žádný klíč? Pusť `fcc-server` na veřejném stroji a nasměruj na něj aplikaci:
+
+**1. Server (musíš udělat ty – např. VPS):**
+```bash
+# na serveru pusť fcc-server, ať poslouchá na všech rozhraních
+fcc-server
+```
+- Vystav port `8082` ven + dej před to reverzní proxy s HTTPS (např. Caddy: `fcc.tvojedomena.cz` → `reverse_proxy 127.0.0.1:8082`). Bez HTTPS nepouštět – klíče a chat by lítaly nešifrovaně.
+- ⚠️ **Veřejný endpoint bez ochrany = kdokoliv čerpá tvoje free kvóty/kredity.** Doporučeno: na serveru vyžaduj token a ten vlož na Vercel jako `FCC_API_KEY` (uživatelé pak pořád nic nezadávají, ale cizí provoz bez tokenu neprojde). Zvaž i rate-limit na proxy.
+
+**2. Aplikace (2 možnosti):**
+- **Vercel pro všechny:** Environment Variables `FCC_ENDPOINT=https://fcc.tvojedomena.cz` (+ volitelně `FCC_API_KEY=…`) → Redeploy. Od té chvíle jede každý návštěvník přes tvůj server bez vlastního klíče.
+- **Jeden prohlížeč:** Nastavení → AI klíče → „Sdílený fcc-server" → vložit adresu → Uložit.
+
+Priorita routování: přímý klíč poskytovatele (vlastní) → sdílený fcc-server → pool klíčů → srozumitelná hláška. Lokální `127.0.0.1:8082` funguje pořád stejně jako dřív.
+
 **Upřímně k limitům:** nic cloudového není doslova bez limitů. ZenMux účtuje drobné částky za tokeny (řádově dolary za běžnou práci) a free modely mají denní/rychlostní stropy. Kdo nechce platit vůbec: lokální `fcc-server` (zdarma) nebo vlastní modely přes Ollamu (slabší než Claude).
 
 ---

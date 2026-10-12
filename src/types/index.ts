@@ -157,6 +157,7 @@ export interface UserSettings {
   };
   kimiEndpoint?: string;
   customEndpoint?: string;
+  fccEndpoint?: string;
   systemPrompt?: string;
   temperature?: number;
 }

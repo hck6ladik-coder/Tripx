@@ -61,7 +61,110 @@ const NO_KEY_MSG =
 
 const ANTHROPIC_MSG =
   '❌ **Prime volani Anthropic API neni podporovano.** ' +
-  'Pouzijte OpenRouter (modely Claude tam najdete taky) nebo jineho OpenAI-kompatibilniho poskytovatele.';
+  'Pouzijte ZenMux, OpenRouter (modely Claude tam najdete taky) nebo jineho OpenAI-kompatibilniho poskytovatele.';
+
+// Proxy na (typicky sdileny vzdaleny) fcc-server pres Anthropic Messages API.
+// Klic od uzivatele neni potreba – server si jede na svych zdrojich.
+// Vraci true, pokud pozadavek prevzala (vcetne chybove SSE obalky).
+async function proxyFcc(fccBase, { model, messages, temperature, apiKey }, res, sendMessage) {
+  let systemPrompt = '';
+  const anthropicMessages = [];
+  for (const m of messages || []) {
+    if (m.role === 'system') {
+      systemPrompt += (systemPrompt ? '\n\n' : '') + m.content;
+    } else {
+      anthropicMessages.push({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content,
+      });
+    }
+  }
+  if (anthropicMessages.length > 0 && anthropicMessages[0].role === 'assistant') {
+    anthropicMessages.unshift({ role: 'user', content: 'Pokracuj' });
+  }
+
+  let targetModel = model || 'claude-fable-5';
+  if (targetModel.includes('fcc/')) targetModel = targetModel.replace(/^fcc\//, '');
+  if (!targetModel.startsWith('claude-') && !targetModel.startsWith('anthropic/')) {
+    targetModel = 'claude-fable-5';
+  }
+
+  const sseHeaders = {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  };
+
+  try {
+    const fccRes = await fetch(`${fccBase}/v1/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey || 'fcc-token',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: targetModel,
+        max_tokens: 4096,
+        system: systemPrompt || undefined,
+        messages: anthropicMessages,
+        stream: true,
+        temperature: temperature ?? 0.7,
+      }),
+    });
+
+    if (!fccRes.ok || !fccRes.body) {
+      const errText = await fccRes.text().catch(() => '');
+      sendMessage(
+        `❌ **Sdileny fcc-server neodpovida (${fccRes.status})**:\n\n\`\`\`\n${errText}\n\`\`\`\n\nZkontrolujte adresu serveru v Nastaveni -> AI klice.`
+      );
+      return true;
+    }
+
+    res.writeHead(200, sseHeaders);
+    const reader = fccRes.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const dataStr = trimmed.replace(/^data:\s*/, '');
+        try {
+          const evt = JSON.parse(dataStr);
+          if (evt.type === 'content_block_delta') {
+            if (evt.delta?.type === 'thinking_delta') {
+              res.write(
+                `data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: evt.delta.thinking } }] })}\n\n`
+              );
+            } else if (evt.delta?.type === 'text_delta') {
+              res.write(
+                `data: ${JSON.stringify({ choices: [{ delta: { content: evt.delta.text } }] })}\n\n`
+              );
+            }
+          } else if (evt.type === 'message_stop') {
+            res.write('data: [DONE]\n\n');
+          }
+        } catch {
+          // ignorovat ne-JSON radky
+        }
+      }
+    }
+    res.write('data: [DONE]\n\n');
+    res.end();
+    return true;
+  } catch (err) {
+    sendMessage(
+      `❌ **Sdileny fcc-server je nedostupny**: ${err?.message || 'Neznama chyba'}.\n\nZkontrolujte adresu serveru v Nastaveni -> AI klice.`
+    );
+    return true;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -116,6 +219,23 @@ export default async function handler(req, res) {
     let effProvider = provider;
     let effKey = keys[provider] || '';
     let effModel = cleanModelId;
+
+    // Sdileny vzdaleny fcc-server (Anthropic protokol) – bez klice od uzivatele.
+    // URL se bere z Nastaveni -> AI klice (fccEndpoint), na Vercelu z FCC_ENDPOINT env.
+    // Ma prednost: kdokoliv s nastavenou adresou jede pres tvuj server.
+    const fccBase = String(req.body.fccEndpoint || process.env.FCC_ENDPOINT || '').replace(/\/+$/, '');
+    const fccLocalOnly = fccBase === '' || fccBase.includes('localhost') || fccBase.includes('127.0.0.1');
+    // Osobni klic z UI ma prednost (setri kvotu sdileneho serveru), pak sdileny server, pak env klice
+    const hasUiKey = DIRECT_PROVIDERS.some((p) => apiKeys && apiKeys[p]);
+    if (fccBase && !fccLocalOnly && !hasUiKey && (isLocalTarget || !effKey)) {
+      await proxyFcc(
+        fccBase,
+        { model, messages, temperature, apiKey: apiKey || process.env.FCC_API_KEY || 'fcc-token' },
+        res,
+        sendMessage
+      );
+      return;
+    }
 
     // Cil je lokalni server (na Vercelu nebezi) nebo chybi klic -> automaticky presmerovat
     if (isLocalTarget || !effKey) {
