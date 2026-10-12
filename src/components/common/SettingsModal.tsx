@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useFileSystem } from '@/hooks/useFileSystem';
 import {
@@ -69,6 +69,9 @@ export function SettingsModal() {
   const [directoryList, setDirectoryList] = useState<{ name: string; path: string }[]>([]);
   const [parentDir, setParentDir] = useState<string | null>(null);
   const [loadingDirs, setLoadingDirs] = useState(false);
+  const [pickingFolder, setPickingFolder] = useState(false);
+  // Skrytý input pro výběr složky ve prohlížečích bez File System Access API (Firefox)
+  const dirInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDirectories = async (targetPath: string) => {
     setLoadingDirs(true);
@@ -128,38 +131,54 @@ export function SettingsModal() {
     setSettingsModalOpen(false);
   };
 
+  const SKIP_DIRS = ['node_modules', '.git', 'dist', '.next', 'out', 'build', 'coverage'];
+
+  const sortNodes = (nodes: any[]) => {
+    nodes.sort((a, b) =>
+      a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'directory' ? -1 : 1
+    );
+    nodes.forEach((n) => {
+      if (n.type === 'directory' && Array.isArray(n.children)) sortNodes(n.children);
+    });
+    return nodes;
+  };
+
+  // Klasický nativní výběr složky (otevře okno systému)
   const handleOpenLocalFolderWithPicker = async () => {
     try {
       if ('showDirectoryPicker' in window) {
-        // @ts-ignore
+        // @ts-ignore - File System Access API
         const dirHandle = await window.showDirectoryPicker();
-        const files: any[] = [];
+        setPickingFolder(true);
+        const rootName: string = dirHandle.name || 'lokální složka';
 
-        async function readDir(handle: any, currentPath = '') {
+        async function readDir(handle: any, currentPath: string): Promise<any[]> {
+          const nodes: any[] = [];
           for await (const entry of handle.values()) {
             const itemPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
             if (entry.kind === 'file') {
-              const file = await entry.getFile();
-              const text = await file.text().catch(() => '');
-              const ext = entry.name.split('.').pop() || '';
-              files.push({
-                id: itemPath,
-                name: entry.name,
-                type: 'file',
-                path: itemPath,
-                language: ext,
-                content: text,
-              });
-            } else if (entry.kind === 'directory') {
-              if (
-                entry.name === 'node_modules' ||
-                entry.name === '.git' ||
-                entry.name === 'dist'
-              ) {
-                continue;
+              try {
+                const file = await entry.getFile();
+                let content = '';
+                if (file.size < 2 * 1024 * 1024) {
+                  content = await file.text().catch(() => '');
+                }
+                const ext = entry.name.includes('.') ? entry.name.split('.').pop() || '' : '';
+                nodes.push({
+                  id: itemPath,
+                  name: entry.name,
+                  type: 'file',
+                  path: itemPath,
+                  language: ext,
+                  content,
+                });
+              } catch {
+                // nečitelný soubor přeskočit
               }
-              const children: any[] = [];
-              files.push({
+            } else if (entry.kind === 'directory') {
+              if (SKIP_DIRS.includes(entry.name)) continue;
+              const children = await readDir(entry, itemPath);
+              nodes.push({
                 id: itemPath,
                 name: entry.name,
                 type: 'directory',
@@ -167,29 +186,86 @@ export function SettingsModal() {
                 children,
                 isOpen: false,
               });
-              await readDir(entry, itemPath);
             }
           }
+          return nodes;
         }
 
-        await readDir(dirHandle);
-        loadLocalFolder(dirHandle.name, files);
+        const files = sortNodes(await readDir(dirHandle, rootName));
+        loadLocalFolder(rootName, files);
+        setPickingFolder(false);
         setSettingsModalOpen(false);
       } else {
-        addToast({
-          type: 'warning',
-          title: 'Prohlížeč nepodporuje File System Picker',
-          message: 'Použijte prosím prohlížeč Chrome, Edge nebo Opera.',
-        });
+        // Fallback pro Firefox a starší prohlížeče
+        dirInputRef.current?.click();
       }
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
+      setPickingFolder(false);
+      if (err?.name !== 'AbortError') {
         addToast({
           type: 'error',
           title: 'Chyba při otevírání složky',
           message: err.message,
         });
       }
+    }
+  };
+
+  // Fallback: čtení složky přes <input webkitdirectory>
+  const handleDirInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
+    setPickingFolder(true);
+    try {
+      const firstRel = (list[0] as any).webkitRelativePath as string;
+      const rootName = firstRel?.split('/')[0] || 'lokální složka';
+      const map = new Map<string, any>();
+      const roots: any[] = [];
+      const ensureDir = (path: string, name: string) => {
+        if (!map.has(path)) {
+          const node = { id: path, name, type: 'directory', path, children: [] as any[], isOpen: false };
+          map.set(path, node);
+          const parentPath = path.split('/').slice(0, -1).join('/');
+          if (parentPath && map.has(parentPath)) map.get(parentPath).children.push(node);
+          else if (!parentPath) roots.push(node);
+        }
+        return map.get(path);
+      };
+      for (const f of Array.from(list)) {
+        const rel = (f as any).webkitRelativePath as string;
+        if (!rel) continue;
+        const parts = rel.split('/');
+        if (parts.length < 2) continue;
+        if (parts.some((p) => SKIP_DIRS.includes(p))) continue;
+        let acc = '';
+        for (let i = 0; i < parts.length - 1; i++) {
+          acc = acc ? `${acc}/${parts[i]}` : parts[i];
+          ensureDir(acc, parts[i]);
+        }
+        const fileName = parts[parts.length - 1];
+        const ext = fileName.includes('.') ? fileName.split('.').pop() || '' : '';
+        let content = '';
+        if (f.size < 2 * 1024 * 1024) content = await f.text().catch(() => '');
+        map.get(acc)?.children.push({
+          id: rel,
+          name: fileName,
+          type: 'file',
+          path: rel,
+          language: ext,
+          content,
+        });
+      }
+      loadLocalFolder(rootName, sortNodes(roots));
+      setSettingsModalOpen(false);
+    } catch (err: any) {
+      addToast({
+        type: 'error',
+        title: 'Chyba při čtení složky',
+        message: err?.message || 'Složku se nepodařilo načíst',
+      });
+    } finally {
+      setPickingFolder(false);
+      e.target.value = '';
     }
   };
 
@@ -354,6 +430,56 @@ export function SettingsModal() {
 
           {activeTab === 'workspace' && (
             <div className="space-y-5">
+              {/* Hlavní: klasický výběr složky (nativní okno systému) */}
+              <div className="p-5 bg-surface-elevated/40 border border-border rounded-xl space-y-3 text-center">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center">
+                  <FolderOpen className="w-6 h-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-text-primary">
+                    Vybrat složku z počítače
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    Otevře se klasické okno systému a vyberete složku lokálně
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={handleOpenLocalFolderWithPicker}
+                  disabled={pickingFolder}
+                  className="gap-2 w-full sm:w-auto justify-center"
+                >
+                  {pickingFolder ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FolderOpen className="w-4 h-4" />
+                  )}
+                  {pickingFolder ? 'Načítám složku…' : 'Vybrat složku…'}
+                </Button>
+                {currentProject && (
+                  <p className="text-xs text-text-secondary">
+                    Aktuálně otevřeno:{' '}
+                    <span className="font-mono text-text-primary">{currentProject.name}</span>
+                  </p>
+                )}
+                {/* Skrytý input pro prohlížeče bez File System Access API */}
+                <input
+                  ref={dirInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleDirInputChange}
+                  {...({ webkitdirectory: '' } as any)}
+                />
+              </div>
+
+              {/* Pokročilé: ruční cesta a procházení přes server */}
+              <details className="group bg-surface-elevated/20 border border-border rounded-xl">
+                <summary className="px-4 py-2.5 text-xs text-text-secondary hover:text-text-primary cursor-pointer transition-colors list-none flex items-center gap-2">
+                  <ChevronRight className="w-3.5 h-3.5 transition-transform group-open:rotate-90" />
+                  <span>Pokročilé – zadat cestu ručně / procházet disk přes server</span>
+                </summary>
+                <div className="px-4 pb-4 space-y-5">
               {/* Sekce 1: Přímé zadání cesty ke složce na disku */}
               <div className="p-4 bg-surface-elevated/40 border border-border rounded-xl space-y-3">
                 <div className="flex items-center gap-3">
@@ -517,19 +643,9 @@ export function SettingsModal() {
                     ))
                   )}
                 </div>
-              </div>
-
-              {/* Sekce 3: Alternativa přes dialog prohlížeče */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={handleOpenLocalFolderWithPicker}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-xs text-text-secondary hover:text-text-primary border border-dashed border-border hover:border-accent/50 rounded-xl transition-colors"
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  <span>Nebo použít dialog prohlížeče (File System Access)</span>
-                </button>
-              </div>
+                </div>
+                </div>
+              </details>
             </div>
           )}
 
