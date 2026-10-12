@@ -275,6 +275,7 @@ export function ModelArenaModal() {
             provider: 'fcc',
             model: candidate.modelId,
             messages: [{ role: 'user', content: prompt }],
+            apiKeys: useAppStore.getState().settings.apiKeys || {},
           }),
         });
 

@@ -126,6 +126,7 @@ ${output1}
           provider: 'fcc',
           model: 'claude-fable-5',
           messages: [{ role: 'user', content: agentPrompt }],
+          apiKeys: useAppStore.getState().settings.apiKeys || {},
         }),
       });
 

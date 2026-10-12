@@ -134,6 +134,23 @@ Repozitář je připravený na deploy bez jakékoliv konfigurace navíc:
 
 **Důležité:** na Vercelu neběží lokální `fcc-server` (modely `fcc/*`), není přístup k disku ani terminál. Pro plnou funkčnost včetně chatu vložte API klíč v **Nastavení** (ukládá se do localStorage v prohlížeči) a pro vývoj s diskem/terminálem spusťte aplikaci lokálně (`npm run dev` + `fcc-server`).
 
+### 🔑 API klíč pro chat (Vercel i lokálně)
+
+Ano — stačí vložit **svůj vlastní klíč** a chat funguje všude, i když je vybraný `fcc/*` model. Backend ho automaticky použije u prvního dostupného poskytovatele a model přesměruje (např. `fcc/claude-fable-5` → Claude přes OpenRouter):
+
+1. **V aplikaci:** Nastavení → vložit klíč (Kimi / OpenRouter / OpenAI / DeepSeek / Groq). Uloží se do prohlížeče, nic víc není potřeba.
+2. **Přednastaveno pro všechny (Vercel):** v dashboardu projektu → Settings → Environment Variables přidejte jeden nebo více klíčů a redeployněte:
+
+| Proměnná | Poskytovatel |
+|---|---|
+| `OPENROUTER_API_KEY` | OpenRouter (doporučeno – fungují tam i modely Claude) |
+| `KIMI_API_KEY` | Moonshot Kimi |
+| `OPENAI_API_KEY` | OpenAI |
+| `DEEPSEEK_API_KEY` | DeepSeek |
+| `GROQ_API_KEY` | Groq |
+
+Pořadí priorit: klíč z Nastavení v UI → Environment Variable na serveru. Přímé volání Anthropic API není podporováno – použijte OpenRouter.
+
 ---
 
 ## 📝 Poznámka k verzi

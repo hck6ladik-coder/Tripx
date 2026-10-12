@@ -219,7 +219,26 @@ function codeSpaceBackendPlugin(): Plugin {
               }
 
               // --- CASE B: DIRECT PROVIDERS (OpenAI, Moonshot Kimi, OpenRouter, etc.) ---
-              if (!apiKey && provider !== 'ollama' && provider !== 'custom') {
+              // Fallback: frontend posila i celou mapu klicu (apiKeys) – kdyz je cil
+              // lokalni server (nebezi) nebo chybi primy klic, presmeruj na prvniho
+              // dostupneho poskytovatele. Jinak se chova presne jako predtim.
+              const poolKeys = (data.apiKeys || {}) as Record<string, string>;
+              const pooledProvider = ['openrouter', 'kimi', 'openai', 'deepseek', 'groq'].find(
+                (p) => poolKeys[p]
+              );
+              let effProvider = provider;
+              let effKey = apiKey || poolKeys[provider] || '';
+              const looksLocalTarget =
+                provider === 'fcc' ||
+                endpoint.includes('8082') ||
+                endpoint.includes('8080') ||
+                model.toLowerCase().includes('nemotron');
+              if ((looksLocalTarget || !effKey) && pooledProvider) {
+                effProvider = pooledProvider;
+                effKey = poolKeys[pooledProvider];
+              }
+
+              if (!effKey && effProvider !== 'ollama' && effProvider !== 'custom') {
                 res.writeHead(200, {
                   'Content-Type': 'text/event-stream',
                   'Cache-Control': 'no-cache',
@@ -248,32 +267,51 @@ Máte dvě možnosti:
 
               const cleanModelId = model.includes('/') ? model.split('/').slice(1).join('/') : model;
 
-              if (provider === 'kimi') {
+              // Pri presmerovani z fcc/* modelu dopln primo pouzitelny model poskytovatele
+              let effModel = cleanModelId;
+              if (effProvider !== provider && model.includes('fcc/')) {
+                const id = model.toLowerCase();
+                if (effProvider === 'openrouter') {
+                  if (id.includes('opus-4')) effModel = 'anthropic/claude-opus-4';
+                  else if (id.includes('sonnet-4')) effModel = 'anthropic/claude-sonnet-4';
+                  else if (id.includes('3-5-sonnet')) effModel = 'anthropic/claude-3.5-sonnet';
+                  else if (id.includes('deepseek-r1')) effModel = 'deepseek/deepseek-r1';
+                  else if (id.includes('deepseek')) effModel = 'deepseek/deepseek-chat';
+                  else if (id.includes('qwen')) effModel = 'qwen/qwen-2.5-coder-32b-instruct';
+                  else effModel = 'anthropic/claude-3.5-sonnet';
+                } else if (effProvider === 'kimi') effModel = 'moonshot-v1-8k';
+                else if (effProvider === 'openai') effModel = 'gpt-4o-mini';
+                else if (effProvider === 'deepseek')
+                  effModel = id.includes('r1') ? 'deepseek-reasoner' : 'deepseek-chat';
+                else if (effProvider === 'groq') effModel = 'llama-3.3-70b-versatile';
+              }
+
+              if (effProvider === 'kimi') {
                 const base = endpoint || 'https://api.moonshot.cn/v1';
                 targetUrl = `${base.replace(/\/+$/, '')}/chat/completions`;
-                headers['Authorization'] = `Bearer ${apiKey}`;
-              } else if (provider === 'openrouter') {
+                headers['Authorization'] = `Bearer ${effKey}`;
+              } else if (effProvider === 'openrouter') {
                 targetUrl = 'https://openrouter.ai/api/v1/chat/completions';
-                headers['Authorization'] = `Bearer ${apiKey}`;
+                headers['Authorization'] = `Bearer ${effKey}`;
                 headers['HTTP-Referer'] = 'http://localhost:3000';
                 headers['X-Title'] = 'CodeSpace AI';
-              } else if (provider === 'openai') {
+              } else if (effProvider === 'openai') {
                 targetUrl = 'https://api.openai.com/v1/chat/completions';
-                headers['Authorization'] = `Bearer ${apiKey}`;
-              } else if (provider === 'deepseek') {
+                headers['Authorization'] = `Bearer ${effKey}`;
+              } else if (effProvider === 'deepseek') {
                 targetUrl = 'https://api.deepseek.com/chat/completions';
-                headers['Authorization'] = `Bearer ${apiKey}`;
-              } else if (provider === 'groq') {
+                headers['Authorization'] = `Bearer ${effKey}`;
+              } else if (effProvider === 'groq') {
                 targetUrl = 'https://api.groq.com/openai/v1/chat/completions';
-                headers['Authorization'] = `Bearer ${apiKey}`;
-              } else if (provider === 'ollama') {
+                headers['Authorization'] = `Bearer ${effKey}`;
+              } else if (effProvider === 'ollama') {
                 const base = endpoint || 'http://localhost:11434/v1';
                 targetUrl = `${base.replace(/\/+$/, '')}/chat/completions`;
               } else {
                 const base = endpoint || 'http://localhost:8082/v1';
                 targetUrl = `${base.replace(/\/+$/, '')}/chat/completions`;
-                if (apiKey) {
-                  headers['Authorization'] = `Bearer ${apiKey}`;
+                if (effKey) {
+                  headers['Authorization'] = `Bearer ${effKey}`;
                 }
               }
 
@@ -281,7 +319,7 @@ Máte dvě možnosti:
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                  model: cleanModelId,
+                  model: effModel,
                   messages,
                   stream: true,
                   temperature: temperature ?? 0.7,

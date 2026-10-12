@@ -174,6 +174,7 @@ Uživatel má přímo v rozhraní tlačítko "Uložit na disk", kterým soubor j
           model: modelId,
           messages: formattedMessages,
           apiKey,
+          apiKeys: settings.apiKeys || {},
           endpoint,
           temperature: settings.temperature ?? 0.7,
         }),
