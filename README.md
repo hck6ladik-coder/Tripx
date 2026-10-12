@@ -121,6 +121,21 @@
 
 ---
 
+## 🌐 Nasazení na Vercel (bez chyby 404)
+
+Repozitář je připravený na deploy bez jakékoliv konfigurace navíc:
+
+- **Root Directory:** kořen repozitáře, framework se detekuje sám (Vite, build `npm run build`, output `dist`).
+- **`vercel.json`** přepisuje všechny cesty mimo `/api/*` na `index.html` (SPA fallback – žádná 404 při reloadu).
+- **Složka `api/`** obsahuje serverless funkce, takže žádný request nekončí na Vercel 404:
+  - `POST /api/chat` – proxy na přímé providery (Kimi, OpenRouter, OpenAI, DeepSeek, Groq) se streamem; bez klíče vrátí srozumitelné upozornění místo chyby.
+  - `GET /api/fs/tree|directories|read` a `POST /api/fs/write` – ladné prázdné odpovědi (disk na Vercelu není).
+  - `POST /api/terminal/exec` – vrátí hlášku, že terminál funguje jen lokálně.
+
+**Důležité:** na Vercelu neběží lokální `fcc-server` (modely `fcc/*`), není přístup k disku ani terminál. Pro plnou funkčnost včetně chatu vložte API klíč v **Nastavení** (ukládá se do localStorage v prohlížeči) a pro vývoj s diskem/terminálem spusťte aplikaci lokálně (`npm run dev` + `fcc-server`).
+
+---
+
 ## 📝 Poznámka k verzi
 
 - Generování obrázků a videí (AI Media Studio) bylo z projektu **zcela odstraněno** – včetně příkazů `/image` a `/video`.
