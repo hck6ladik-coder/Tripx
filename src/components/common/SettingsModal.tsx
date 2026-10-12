@@ -22,6 +22,7 @@ import {
   Brain,
   Plus,
   Trash2,
+  Layout,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ export function SettingsModal() {
     addMemoryFact,
     removeMemoryFact,
     clearMemory,
+    setInterfaceCustomizerOpen,
   } = useAppStore();
 
   const { loadProject } = useFileSystem();
@@ -198,7 +200,7 @@ export function SettingsModal() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-elevated/40">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">Nastavení TripxCZ-Twitch</h2>
+            <h2 className="text-lg font-semibold text-text-primary">Nastavení hck6lada</h2>
           </div>
           <button
             onClick={() => setSettingsModalOpen(false)}
@@ -245,6 +247,16 @@ export function SettingsModal() {
           >
             <Brain className="w-4 h-4" />
             Paměť AI
+          </button>
+          <button
+            onClick={() => {
+              setSettingsModalOpen(false);
+              setInterfaceCustomizerOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-text-secondary hover:text-accent transition-colors"
+          >
+            <Layout className="w-4 h-4 text-accent" />
+            Rozvržení & Panely
           </button>
         </div>
 
@@ -526,7 +538,7 @@ export function SettingsModal() {
               <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/30 rounded-xl">
                 <Brain className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-text-primary">Paměť asistenta TripxCZ-Twitch</p>
+                  <p className="text-sm font-medium text-text-primary">Paměť asistenta hck6lada</p>
                   <p className="text-xs text-text-secondary mt-1">
                     Fakta uložená v paměti jsou automaticky vkládána do každé konverzace — asistent si je bude pamatovat vždy.
                   </p>

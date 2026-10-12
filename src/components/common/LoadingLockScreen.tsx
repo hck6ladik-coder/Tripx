@@ -29,7 +29,7 @@ export function LoadingLockScreen() {
     { text: '⚡ Připojování k fcc-server (Claude Fable 5 na portu 8082)... ONLINE', icon: Cpu, color: 'text-accent' },
     { text: '📂 Připojování lokálního pracovního prostoru d:/trip... PŘIPRAVENO', icon: Terminal, color: 'text-blue-400' },
     { text: '🧠 Aktivace Senior Software Architect & Programmer schopností... 100%', icon: Sparkles, color: 'text-purple-400' },
-    { text: '🚀 Všechny subsystémy online! Vítej v TripxCZ-Twitch CodeSpace!', icon: CheckCircle2, color: 'text-emerald-400' },
+    { text: '🚀 Všechny subsystémy online! Vítej v hck6lada CodeSpace!', icon: CheckCircle2, color: 'text-emerald-400' },
   ];
 
   // Handle pin submit
@@ -164,7 +164,7 @@ export function LoadingLockScreen() {
         </span>
         <Tv className="w-3.5 h-3.5 text-purple-400" />
         <span className="text-xs font-semibold tracking-wider text-text-primary">
-          TRIPXCZ-TWITCH
+          HCK6LADA
         </span>
         <span className="text-[10px] text-text-secondary/80 border-l border-white/10 pl-2">
           DEV SYSTEM OS v2.0
@@ -199,7 +199,7 @@ export function LoadingLockScreen() {
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
             <span>CodeSpace AI</span>
             <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
-              TripxCZ
+              hck6lada
             </span>
           </h1>
           <p className="text-xs text-text-secondary">
@@ -349,7 +349,7 @@ export function LoadingLockScreen() {
 
         {/* Footer info */}
         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-text-secondary/60">
-          <span>TripxCZ twitch.tv/tripxcz</span>
+          <span>hck6lada CodeSpace</span>
           <span>Claude Fable 5 :8082</span>
         </div>
       </div>

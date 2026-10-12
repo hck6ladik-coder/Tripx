@@ -16,6 +16,7 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
+  Play,
 } from 'lucide-react';
 import { useTextToSpeech } from '@/hooks/useSpeech';
 import { useState } from 'react';
@@ -344,7 +345,7 @@ function CodeBlock({
   const [showInput, setShowInput] = useState(false);
   const [customPath, setCustomPath] = useState('');
 
-  const { createLocalFile, openFile } = useAppStore();
+  const { createLocalFile, openFile, setActiveArtifact } = useAppStore();
 
   const { filePath, cleanCode } = extractFilePath(code, rawLang || language);
   const effectivePath = filePath || customPath;
@@ -381,6 +382,26 @@ function CodeBlock({
       content: cleanCode,
     };
     openFile(fileNode);
+  };
+
+  const isVisualCode =
+    ['html', 'svg', 'tsx', 'jsx', 'javascript', 'js', 'react', 'vue', 'css'].includes(
+      language.toLowerCase()
+    ) ||
+    cleanCode.includes('<html') ||
+    cleanCode.includes('<svg') ||
+    cleanCode.includes('return (') ||
+    cleanCode.includes('function App');
+
+  const handleOpenInCanvas = () => {
+    const filename = effectivePath ? effectivePath.split(/[\/\\]/).pop() || 'kód' : `${language.toUpperCase()} náhled`;
+    setActiveArtifact({
+      id: `artifact-${Date.now()}`,
+      title: filename,
+      language,
+      code: cleanCode,
+      updatedAt: new Date(),
+    });
   };
 
   return (
@@ -471,6 +492,18 @@ function CodeBlock({
                 <ExternalLink className="w-3 h-3" />
                 <span>Editor</span>
               </button>
+
+              {/* Canvas Preview button */}
+              {isVisualCode && (
+                <button
+                  onClick={handleOpenInCanvas}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/25 rounded-lg transition-colors font-medium shadow-xs"
+                  title="Spustit živý náhled v Artifacts Canvasu"
+                >
+                  <Play className="w-3 h-3 fill-indigo-400" />
+                  <span>Canvas</span>
+                </button>
+              )}
             </>
           )}
 

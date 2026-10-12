@@ -68,7 +68,7 @@ export function Terminal({ terminalId: _terminalId }: TerminalProps) {
     terminalRef.current = term;
 
     // Welcome banner
-    term.writeln('\x1b[38;2;124;140;255m⚡ TripxCZ-Twitch CodeSpace Terminal (PowerShell)\x1b[0m');
+    term.writeln('\x1b[38;2;124;140;255m⚡ hck6lada CodeSpace Terminal (PowerShell)\x1b[0m');
     term.writeln('\x1b[90mLokální prostředí: ' + cwdRef.current + ' | Připraveno pro spouštění příkazů\x1b[0m');
     term.writeln('');
 

@@ -1,10 +1,11 @@
-// AI Provider a Model
+﻿// AI Provider a Model
 export interface AIProvider {
   id: string;
   name: string;
   icon?: string;
   connected: boolean;
   requiresAuth: boolean;
+  color?: string;
 }
 
 export interface AIModel {
@@ -136,6 +137,8 @@ export interface UserSettings {
   minimap: boolean;
   autoSave: boolean;
   sidebarCollapsed: boolean;
+  compactMode?: boolean;
+  showStatusBar?: boolean;
   activePanels: {
     chat: boolean;
     editor: boolean;
@@ -164,4 +167,40 @@ export interface Toast {
   title: string;
   message?: string;
   duration?: number;
+}
+
+// ── Prompt Manager (nová funkce, zachována) ──
+export type PromptCategory =
+  | 'debug'
+  | 'refactor'
+  | 'test'
+  | 'review'
+  | 'docs'
+  | 'explain'
+  | 'generate'
+  | 'custom';
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  content: string;
+  category: PromptCategory;
+  tags: string[];
+  favorite?: boolean;
+  isBuiltin?: boolean;
+  usageCount?: number;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+// ── Live Artifacts / Canvas (nová funkce, zachována) ──
+export interface LiveArtifact {
+  id: string;
+  title: string;
+  code: string;
+  language?: string;
+  content?: string;
+  type?: 'code' | 'html' | 'markdown' | 'svg' | 'mermaid';
+  createdAt?: Date;
+  updatedAt?: Date | string;
 }

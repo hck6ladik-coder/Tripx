@@ -1,8 +1,8 @@
-# TripxCZ-Twitch CodeSpace AI 🚀
+# hck6lada CodeSpace AI 🚀
 
-> Moderní lokální webové vývojové prostředí (IDE) a AI programátorský asistent přizpůsobený pro **Tripa (TripxCZ na Twitchi)** s integrovaným modelem **Claude 3.5 Sonnet** přes `fcc-server`.
+> Moderní lokální webové vývojové prostředí (IDE) a AI programátorský asistent **hck6lada** s integrovaným modelem **Claude 3.5 Sonnet** přes `fcc-server`.
 
-![TripxCZ-Twitch](https://img.shields.io/badge/TripxCZ-Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)
+![hck6lada](https://img.shields.io/badge/hck6lada-CodeSpace-7c8cff?style=for-the-badge)
 ![AI-Model](https://img.shields.io/badge/AI%20Model-Claude%203.5%20Sonnet%20(8082)-blue?style=for-the-badge)
 ![Security](https://img.shields.io/badge/Gate%20PIN-666-crimson?style=for-the-badge)
 
@@ -11,7 +11,7 @@
 ## ✨ Klíčové vlastnosti
 
 - 🔐 **Zabezpečený Loading & Lock Screen (PIN 666):**
-  - Stylová úvodní zamykací obrazovka s Twitch vizuály a digitální klávesnicí.
+  - Stylová úvodní zamykací obrazovka s neonovými vizuály a digitální klávesnicí.
   - Zabezpečení kódem `666` aktivující "Režim 666".
   - Interaktivní bootovací sekvence s inicializací všech subsystémů.
   - Tlačítko pro rychlé zamknutí obrazovky přímo ve StatusBaru a Sidebaru.
@@ -30,10 +30,45 @@
 
 - 💻 **Kompletní vývojářské rozhraní:**
   - **Monaco Editor** s podporou desítek jazyků, zvýrazňováním syntaxe a záložkami.
-  - **Interaktivní terminál** (xterm.js).
+  - **Interaktivní terminál** (xterm.js) s reálným spouštěním příkazů.
   - **Průzkumník souborů** s prohlížečem lokálních složek a stromem projektu.
   - **Command Palette (Ctrl+K)** pro rychlé vyhledávání příkazů.
   - **Tři režimy asistenta:** Chat (běžná diskuze), Plán (architektonický návrh), Agent (přímý zápis kódu na disk).
+
+- 🛠️ **Autonomní Self-Healing Agent:**
+  - Samostatný agent pro automatickou diagnostiku a opravu chyb v projektu.
+
+- ⚔️ **AI Model Arena:**
+  - Souboj modelů – porovnání odpovědí více modelů vedle sebe.
+
+- 📚 **Prompt Manager (Ctrl+Shift+P):**
+  - Knihovna předpřipravených i vlastních promptů (debug, refactor, testy, review, dokumentace…).
+  - Oblíbené, vyhledávání, proměnné (`{{výběr}}`, `{{soubor}}`, `{{jazyk}}`) a vložení do chatu jedním klikem.
+
+- 🎙️ **Hlasové ovládání:**
+  - **Hlasový vstup** do chatu (české diktování) a **živý hlasový chat** ve stylu ChatGPT.
+  - **TTS mluvení** odpovědí asistenta.
+
+- 🎨 **Živý Canvas & Artifacts:**
+  - Interaktivní sandbox náhled pro HTML, React/TSX a SVG přímo z chatu nebo editoru.
+  - Úprava kódu, přepínání náhled/kód, konzole, stahování jako `.html`.
+
+- 🧩 **Přizpůsobení rozhraní (Ctrl+Shift+L):**
+  - Zapínání/vypínání panelů (Chat, Editor, Terminál, Canvas), Status Baru a sidebaru.
+  - Předvolby rozvržení: Plné IDE, Focus Chat, Čistý Editor, Web Studio, Ultra Zen Mode.
+
+---
+
+## ⌨️ Klávesové zkratky
+
+| Zkratka | Akce |
+|---|---|
+| `Ctrl+K` | Command Palette |
+| `Ctrl+Shift+P` | Prompt Manager |
+| `Ctrl+Shift+V` | Hlasový chat |
+| `Ctrl+Shift+L` | Přizpůsobení rozhraní |
+| `Ctrl+B` | Přepnout sidebar |
+| `Ctrl+N` | Nový chat |
 
 ---
 
@@ -79,8 +114,20 @@
    Přejděte na [http://localhost:3000](http://localhost:3000).
    Zadejte kód **`666`** pro odemčení a inicializaci systému.
 
+6. **Kontrola buildu:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📝 Poznámka k verzi
+
+- Generování obrázků a videí (AI Media Studio) bylo z projektu **zcela odstraněno** – včetně příkazů `/image` a `/video`.
+- Typy, konstanty a store byly sjednoceny se stabilní zálohou, všechny ostatní funkce (Prompt Manager, Voice Chat, Canvas, Arena, Self-Healing Agent) jsou plně funkční a build prochází (`tsc` bez chyb).
+
 ---
 
 ## 👤 Autor
 
-- **Trip** ([twitch.tv/tripxcz](https://twitch.tv/tripxcz))
+- **hck6lada**

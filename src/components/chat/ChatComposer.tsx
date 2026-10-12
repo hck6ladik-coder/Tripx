@@ -16,6 +16,8 @@ import {
   FileText,
   Mic,
   MicOff,
+  BookOpen,
+  Headphones,
 } from 'lucide-react';
 import { useSpeechToText } from '@/hooks/useSpeech';
 import { AGENT_MODES } from '@/lib/constants';
@@ -63,12 +65,30 @@ export function ChatComposer({
     }
   }, [prefill, onClearPrefill]);
 
+  // Naslouchat na vložení z Prompt Manageru
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail.text;
+      if (text) {
+        setInput(text);
+        setTimeout(() => {
+          textareaRef.current?.focus();
+          adjustHeight();
+        }, 50);
+      }
+    };
+    window.addEventListener('prompt-manager-insert', handler);
+    return () => window.removeEventListener('prompt-manager-insert', handler);
+  }, []);
+
   const {
     conversations,
     addMessage,
     updateMessage,
     selectedModel: model,
     addToast,
+    setPromptManagerOpen,
+    setVoiceChatOpen,
   } = useAppStore();
 
   const conversation = conversations.find((c) => c.id === conversationId);
@@ -122,6 +142,8 @@ export function ChatComposer({
 
   const handleSend = useCallback(async () => {
     if ((!input.trim() && attachments.length === 0) || !conversationId || isLoading) return;
+
+    const trimmedInput = input.trim();
 
     const userMessage: ChatMessage = {
       id: generateId(),
@@ -356,6 +378,24 @@ export function ChatComposer({
               onClick={toggleListening}
             >
               {isListening ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
+            </button>
+            <div className="w-px h-4 bg-border mx-0.5" />
+            <button
+              type="button"
+              onClick={() => setPromptManagerOpen(true)}
+              className="p-1.5 rounded-lg text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+              title="Prompt Manager (Ctrl+Shift+P)"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setVoiceChatOpen(true)}
+              className="relative p-1.5 rounded-lg text-text-secondary hover:text-indigo-400 hover:bg-indigo-400/10 transition-all group"
+              title="Živý hlasový chat jako ChatGPT (Ctrl+Shift+V)"
+            >
+              <Headphones className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
             </button>
           </div>
 

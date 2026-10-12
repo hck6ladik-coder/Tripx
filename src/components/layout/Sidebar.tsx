@@ -12,6 +12,7 @@ import {
   Pencil,
   Bot,
   Lock,
+  Layout,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
@@ -29,6 +30,7 @@ export function Sidebar() {
     currentProject,
     setSettingsModalOpen,
     setLocked,
+    setInterfaceCustomizerOpen,
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,10 +57,18 @@ export function Sidebar() {
             <Bot className="w-4 h-4 text-accent" />
           </div>
           <span className="font-semibold text-sm text-text-primary">
-            TripxCZ-Twitch
+            hck6lada
           </span>
         </div>
         <div className="flex items-center gap-1">
+          <Tooltip content="Rozvržení & Panely (Ctrl+Shift+L)">
+            <button
+              onClick={() => setInterfaceCustomizerOpen(true)}
+              className="p-1.5 rounded-lg text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+            >
+              <Layout className="w-3.5 h-3.5 text-accent" />
+            </button>
+          </Tooltip>
           <Tooltip content="Zamknout obrazovku (kód: 666)">
             <button
               onClick={() => setLocked(true)}
@@ -67,7 +77,7 @@ export function Sidebar() {
               <Lock className="w-3.5 h-3.5" />
             </button>
           </Tooltip>
-          <Tooltip content="Skrýt sidebar">
+          <Tooltip content="Skrýt sidebar (Ctrl+B)">
             <button
               onClick={() => setSidebarVisible(false)}
               className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors"
@@ -206,6 +216,13 @@ export function Sidebar() {
         <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors">
           <Star className="w-4 h-4" />
           Oblíbené
+        </button>
+        <button
+          onClick={() => setInterfaceCustomizerOpen(true)}
+          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors"
+        >
+          <Layout className="w-4 h-4 text-accent" />
+          Rozvržení & Panely
         </button>
         <button
           onClick={() => setSettingsModalOpen(true)}

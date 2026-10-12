@@ -1,4 +1,4 @@
-import { AIProvider, AIModel, AgentMode, UserSettings } from '@/types';
+﻿import { AIProvider, AIModel, AgentMode, UserSettings } from '@/types';
 
 export const APP_NAME = 'TripxCZ-Twitch';
 

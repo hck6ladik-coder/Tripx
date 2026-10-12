@@ -11,6 +11,8 @@ import {
   Toast,
   AgentMode,
   AIModel,
+  SavedPrompt,
+  LiveArtifact,
 } from '@/types';
 import { generateId } from '@/lib/utils';
 import { DEFAULT_SETTINGS, MOCK_MODELS } from '@/lib/constants';
@@ -91,6 +93,26 @@ interface AppState {
   addMemoryFact: (fact: string) => void;
   removeMemoryFact: (index: number) => void;
   clearMemory: () => void;
+
+  // Prompt Manager + Voice chat (nové funkce, zachovány)
+  promptManagerOpen: boolean;
+  setPromptManagerOpen: (open: boolean) => void;
+  voiceChatOpen: boolean;
+  setVoiceChatOpen: (open: boolean) => void;
+  savedPrompts: SavedPrompt[];
+  addSavedPrompt: (prompt: SavedPrompt) => void;
+  updateSavedPrompt: (id: string, updates: Partial<SavedPrompt>) => void;
+  deleteSavedPrompt: (id: string) => void;
+  togglePromptFavorite: (id: string) => void;
+
+  // Live Artifacts & Canvas (nová funkce, zachována)
+  activeArtifact: LiveArtifact | null;
+  setActiveArtifact: (artifact: LiveArtifact | null) => void;
+
+  // Interface & Layout Customizer (nová funkce, zachována)
+  interfaceCustomizerOpen: boolean;
+  setInterfaceCustomizerOpen: (open: boolean) => void;
+  setLayoutPreset: (preset: 'full' | 'chat-only' | 'editor-only' | 'web-studio' | 'zen') => void;
 }
 
 function createNewConversation(): Conversation {
@@ -570,6 +592,87 @@ export const useAppStore = create<AppState>()(
           memoryFacts: (state.memoryFacts || []).filter((_, i) => i !== index),
         })),
       clearMemory: () => set({ memoryFacts: [] }),
+
+      // Prompt Manager
+      promptManagerOpen: false,
+      setPromptManagerOpen: (open) => set({ promptManagerOpen: open }),
+      voiceChatOpen: false,
+      setVoiceChatOpen: (open) => set({ voiceChatOpen: open }),
+      savedPrompts: [],
+      addSavedPrompt: (prompt) =>
+        set((state) => ({ savedPrompts: [...state.savedPrompts, prompt] })),
+      updateSavedPrompt: (id, updates) =>
+        set((state) => ({
+          savedPrompts: state.savedPrompts.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+        })),
+      deleteSavedPrompt: (id) =>
+        set((state) => ({
+          savedPrompts: state.savedPrompts.filter((p) => p.id !== id),
+        })),
+      togglePromptFavorite: (id) =>
+        set((state) => ({
+          savedPrompts: state.savedPrompts.map((p) =>
+            p.id === id ? { ...p, favorite: !p.favorite } : p
+          ),
+        })),
+
+      // Live Artifacts & Canvas
+      activeArtifact: null,
+      setActiveArtifact: (artifact) =>
+        set((state) => ({
+          activeArtifact: artifact,
+          settings: {
+            ...state.settings,
+            activePanels: {
+              ...state.settings.activePanels,
+              preview: true,
+            },
+          },
+        })),
+
+      // Interface & Layout Customizer
+      interfaceCustomizerOpen: false,
+      setInterfaceCustomizerOpen: (open) => set({ interfaceCustomizerOpen: open }),
+      setLayoutPreset: (preset) => {
+        set((state) => {
+          let sidebar = state.sidebarVisible;
+          let statusBar = state.settings.showStatusBar !== false;
+          let activePanels = { ...state.settings.activePanels };
+
+          if (preset === 'full') {
+            sidebar = true;
+            statusBar = true;
+            activePanels = { chat: true, editor: true, terminal: true, preview: false };
+          } else if (preset === 'chat-only') {
+            sidebar = true;
+            statusBar = true;
+            activePanels = { chat: true, editor: false, terminal: false, preview: false };
+          } else if (preset === 'editor-only') {
+            sidebar = true;
+            statusBar = true;
+            activePanels = { chat: false, editor: true, terminal: false, preview: false };
+          } else if (preset === 'web-studio') {
+            sidebar = true;
+            statusBar = true;
+            activePanels = { chat: false, editor: true, terminal: false, preview: true };
+          } else if (preset === 'zen') {
+            sidebar = false;
+            statusBar = false;
+            activePanels = { chat: false, editor: true, terminal: false, preview: false };
+          }
+
+          return {
+            sidebarVisible: sidebar,
+            settings: {
+              ...state.settings,
+              showStatusBar: statusBar,
+              activePanels,
+            },
+          };
+        });
+      },
     }),
     {
       name: 'codespace-ai-storage',
@@ -596,6 +699,7 @@ export const useAppStore = create<AppState>()(
         settings: state.settings,
         selectedModel: state.selectedModel,
         memoryFacts: state.memoryFacts,
+        savedPrompts: state.savedPrompts,
       }),
     }
   )

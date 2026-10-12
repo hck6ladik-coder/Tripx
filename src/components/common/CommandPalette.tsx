@@ -10,6 +10,11 @@ import {
   Settings,
   Bot,
   Swords,
+  BookOpen,
+  Headphones,
+  Sparkles,
+  Layout,
+  Maximize2,
 } from 'lucide-react';
 
 const commands = [
@@ -56,10 +61,48 @@ const commands = [
     shortcut: 'Ctrl+Shift+M',
   },
   {
+    id: 'prompt-manager',
+    label: 'Prompt Manager (Knihovna promptů)',
+    icon: <BookOpen className="w-4 h-4 text-emerald-400" />,
+    shortcut: 'Ctrl+Shift+P',
+  },
+  {
+    id: 'voice-chat',
+    label: 'Hlasový Live Chat (ChatGPT Styl)',
+    icon: <Headphones className="w-4 h-4 text-indigo-400" />,
+    shortcut: 'Ctrl+Shift+V',
+  },
+  {
+    id: 'open-canvas',
+    label: 'Živý Canvas & Artifacts Preview',
+    icon: <Sparkles className="w-4 h-4 text-purple-400" />,
+  },
+  {
     id: 'toggle-sidebar',
     label: 'Přepnout sidebar',
     icon: <MessageSquare className="w-4 h-4" />,
     shortcut: 'Ctrl+B',
+  },
+  {
+    id: 'interface-customizer',
+    label: 'Přizpůsobit rozhraní & panely',
+    icon: <Layout className="w-4 h-4 text-accent" />,
+    shortcut: 'Ctrl+Shift+L',
+  },
+  {
+    id: 'toggle-statusbar',
+    label: 'Přepnout spodní stavovou lištu (Status Bar)',
+    icon: <Layout className="w-4 h-4 text-emerald-400" />,
+  },
+  {
+    id: 'preset-zen',
+    label: 'Ultra Zen Mode (Soustředění na kód)',
+    icon: <Maximize2 className="w-4 h-4 text-amber-400" />,
+  },
+  {
+    id: 'preset-full',
+    label: 'Předvolba rozvržení: Plné IDE',
+    icon: <Layout className="w-4 h-4 text-blue-400" />,
   },
 ];
 
@@ -73,6 +116,12 @@ export function CommandPalette() {
     sidebarVisible,
     setSelfHealingAgentModalOpen,
     setModelArenaOpen,
+    setPromptManagerOpen,
+    setVoiceChatOpen,
+    setInterfaceCustomizerOpen,
+    setLayoutPreset,
+    settings,
+    updateSettings,
   } = useAppStore();
 
   const [search, setSearch] = useState('');
@@ -116,6 +165,34 @@ export function CommandPalette() {
         break;
       case 'model-arena':
         setModelArenaOpen(true);
+        break;
+      case 'prompt-manager':
+        setPromptManagerOpen(true);
+        break;
+      case 'voice-chat':
+        setVoiceChatOpen(true);
+        break;
+      case 'open-canvas':
+        updateSettings({
+          activePanels: {
+            ...settings.activePanels,
+            preview: true,
+          },
+        });
+        break;
+      case 'interface-customizer':
+        setInterfaceCustomizerOpen(true);
+        break;
+      case 'toggle-statusbar':
+        updateSettings({
+          showStatusBar: settings.showStatusBar === false ? true : false,
+        });
+        break;
+      case 'preset-zen':
+        setLayoutPreset('zen');
+        break;
+      case 'preset-full':
+        setLayoutPreset('full');
         break;
     }
     setCommandPaletteOpen(false);
