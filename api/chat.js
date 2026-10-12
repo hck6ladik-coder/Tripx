@@ -222,8 +222,12 @@ export default async function handler(req, res) {
 
     // Sdileny vzdaleny fcc-server (Anthropic protokol) – bez klice od uzivatele.
     // URL se bere z Nastaveni -> AI klice (fccEndpoint), na Vercelu z FCC_ENDPOINT env.
-    // Ma prednost: kdokoliv s nastavenou adresou jede pres tvuj server.
-    const fccBase = String(req.body.fccEndpoint || process.env.FCC_ENDPOINT || '').replace(/\/+$/, '');
+    // POZOR: prazdna/localhost hodnota z UI nesmi prebit serverovou env promennou
+    // (frontend posila default http://127.0.0.1:8082 vzdy) – ta na Vercelu nedava smysl.
+    const uiFcc = String(req.body.fccEndpoint || '');
+    const uiFccIsLocal =
+      uiFcc === '' || uiFcc.includes('localhost') || uiFcc.includes('127.0.0.1');
+    const fccBase = (uiFccIsLocal ? process.env.FCC_ENDPOINT || '' : uiFcc).replace(/\/+$/, '');
     const fccLocalOnly = fccBase === '' || fccBase.includes('localhost') || fccBase.includes('127.0.0.1');
     // Osobni klic z UI ma prednost (setri kvotu sdileneho serveru), pak sdileny server, pak env klice
     const hasUiKey = DIRECT_PROVIDERS.some((p) => apiKeys && apiKeys[p]);
