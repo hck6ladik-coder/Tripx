@@ -46,7 +46,7 @@ export function SettingsModal() {
 
   const { loadProject } = useFileSystem();
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'workspace' | 'memory'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'workspace' | 'memory' | 'ai'>('editor');
   const [newFact, setNewFact] = useState('');
   // Local state for editing
   const [systemPrompt, setSystemPrompt] = useState(settings.systemPrompt || '');
@@ -55,11 +55,20 @@ export function SettingsModal() {
   const [tabSize, setTabSize] = useState(settings.tabSize || 2);
   const [wordWrap, setWordWrap] = useState(settings.wordWrap ?? true);
   const [minimap, setMinimap] = useState(settings.minimap ?? true);
+  // AI klice (ukladaji se do localStorage, nikdy se necommituji do gitu)
+  const [apiKeysForm, setApiKeysForm] = useState({ ...(settings.apiKeys || {}) });
+  const [showKeys, setShowKeys] = useState(false);
+  const [kimiEndpointForm, setKimiEndpointForm] = useState(
+    settings.kimiEndpoint || 'https://api.moonshot.cn/v1'
+  );
+  const [customEndpointForm, setCustomEndpointForm] = useState(
+    settings.customEndpoint || 'http://localhost:8082'
+  );
 
   // Sync tab with external trigger
   useEffect(() => {
-    if (settingsModalTab && ['editor', 'workspace', 'memory'].includes(settingsModalTab)) {
-      setActiveTab(settingsModalTab as 'editor' | 'workspace' | 'memory');
+    if (settingsModalTab && ['editor', 'workspace', 'memory', 'ai'].includes(settingsModalTab)) {
+      setActiveTab(settingsModalTab as 'editor' | 'workspace' | 'memory' | 'ai');
     }
   }, [settingsModalTab, settingsModalOpen]);
 
@@ -120,6 +129,9 @@ export function SettingsModal() {
       tabSize,
       wordWrap,
       minimap,
+      apiKeys: { ...settings.apiKeys, ...apiKeysForm },
+      kimiEndpoint: kimiEndpointForm,
+      customEndpoint: customEndpointForm,
     });
 
     addToast({
@@ -301,6 +313,18 @@ export function SettingsModal() {
             Editor & Prompt
           </button>
           <button
+            onClick={() => setActiveTab('ai')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'ai'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+            )}
+          >
+            <Key className="w-4 h-4" />
+            AI klíče
+          </button>
+          <button
             onClick={() => setActiveTab('workspace')}
             className={cn(
               'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
@@ -424,6 +448,79 @@ export function SettingsModal() {
                   />
                   <span>Zobrazit minimapu v editoru</span>
                 </label>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ai' && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/30 rounded-xl">
+                <Key className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-text-primary">API klíče poskytovatelů</p>
+                  <p className="text-xs text-text-secondary mt-1">
+                    Stačí jeden klíč a chat funguje všude – i s vybraným <span className="font-mono">fcc/*</span> modelem.
+                    Klíče se ukládají jen do prohlížeče (localStorage), nikdy do gitu.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowKeys(!showKeys)}
+                  className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors"
+                  title={showKeys ? 'Skrýt klíče' : 'Zobrazit klíče'}
+                >
+                  {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {[
+                { id: 'zenmux', label: 'ZenMux', placeholder: 'ZenMux klíč (doporučeno – umí všechny fcc/* modely)…' },
+                { id: 'openrouter', label: 'OpenRouter', placeholder: 'sk-or-…' },
+                { id: 'kimi', label: 'Kimi (Moonshot)', placeholder: 'Kimi klíč…' },
+                { id: 'openai', label: 'OpenAI', placeholder: 'sk-…' },
+                { id: 'anthropic', label: 'Anthropic', placeholder: 'sk-ant-…' },
+                { id: 'deepseek', label: 'DeepSeek', placeholder: 'DeepSeek klíč…' },
+                { id: 'groq', label: 'Groq', placeholder: 'gsk_…' },
+                { id: 'custom', label: 'Vlastní (custom)', placeholder: 'Klíč pro vlastní endpoint…' },
+              ].map((f) => (
+                <div key={f.id}>
+                  <label className="text-sm font-medium text-text-primary block mb-1">
+                    {f.label}:
+                  </label>
+                  <input
+                    type={showKeys ? 'text' : 'password'}
+                    value={(apiKeysForm as any)[f.id] || ''}
+                    onChange={(e) =>
+                      setApiKeysForm((prev) => ({ ...prev, [f.id]: e.target.value }))
+                    }
+                    placeholder={f.placeholder}
+                    className="w-full p-2.5 bg-surface border border-border rounded-xl text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent font-mono"
+                  />
+                </div>
+              ))}
+
+              <div>
+                <label className="text-sm font-medium text-text-primary block mb-1">
+                  Kimi endpoint:
+                </label>
+                <input
+                  type="text"
+                  value={kimiEndpointForm}
+                  onChange={(e) => setKimiEndpointForm(e.target.value)}
+                  className="w-full p-2.5 bg-surface border border-border rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-text-primary block mb-1">
+                  Vlastní endpoint:
+                </label>
+                <input
+                  type="text"
+                  value={customEndpointForm}
+                  onChange={(e) => setCustomEndpointForm(e.target.value)}
+                  className="w-full p-2.5 bg-surface border border-border rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent font-mono"
+                />
               </div>
             </div>
           )}

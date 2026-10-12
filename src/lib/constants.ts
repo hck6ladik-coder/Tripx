@@ -91,6 +91,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     anthropic: '',
     groq: '',
     deepseek: '',
+    zenmux: '',
     custom: '',
   },
   kimiEndpoint: 'https://api.moonshot.cn/v1',

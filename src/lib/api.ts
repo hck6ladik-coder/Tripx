@@ -57,6 +57,8 @@ export async function sendMessageStream(
         apiKey = settings.apiKeys?.deepseek || '';
       } else if (providerId === 'groq') {
         apiKey = settings.apiKeys?.groq || '';
+      } else if (providerId === 'zenmux') {
+        apiKey = settings.apiKeys?.zenmux || '';
       } else if (providerId === 'custom') {
         apiKey = settings.apiKeys?.custom || '';
         endpoint = settings.customEndpoint || 'http://localhost:8080/v1';

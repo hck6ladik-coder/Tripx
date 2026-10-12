@@ -223,7 +223,7 @@ function codeSpaceBackendPlugin(): Plugin {
               // lokalni server (nebezi) nebo chybi primy klic, presmeruj na prvniho
               // dostupneho poskytovatele. Jinak se chova presne jako predtim.
               const poolKeys = (data.apiKeys || {}) as Record<string, string>;
-              const pooledProvider = ['openrouter', 'kimi', 'openai', 'deepseek', 'groq'].find(
+              const pooledProvider = ['zenmux', 'openrouter', 'kimi', 'openai', 'deepseek', 'groq'].find(
                 (p) => poolKeys[p]
               );
               let effProvider = provider;
@@ -271,7 +271,15 @@ Máte dvě možnosti:
               let effModel = cleanModelId;
               if (effProvider !== provider && model.includes('fcc/')) {
                 const id = model.toLowerCase();
-                if (effProvider === 'openrouter') {
+                if (effProvider === 'zenmux') {
+                  if (id.includes('opus-4')) effModel = 'anthropic/claude-opus-4.1';
+                  else if (id.includes('sonnet-4')) effModel = 'anthropic/claude-sonnet-4.5';
+                  else if (id.includes('3-5-sonnet')) effModel = 'anthropic/claude-sonnet-4.5';
+                  else if (id.includes('fable')) effModel = 'anthropic/claude-fable-5';
+                  else if (id.includes('deepseek')) effModel = 'deepseek/deepseek-v4.1-flash';
+                  else if (id.includes('qwen')) effModel = 'qwen/qwen3.8-max';
+                  else effModel = 'anthropic/claude-fable-5';
+                } else if (effProvider === 'openrouter') {
                   if (id.includes('opus-4')) effModel = 'anthropic/claude-opus-4';
                   else if (id.includes('sonnet-4')) effModel = 'anthropic/claude-sonnet-4';
                   else if (id.includes('3-5-sonnet')) effModel = 'anthropic/claude-3.5-sonnet';
@@ -284,6 +292,17 @@ Máte dvě možnosti:
                 else if (effProvider === 'deepseek')
                   effModel = id.includes('r1') ? 'deepseek-reasoner' : 'deepseek-chat';
                 else if (effProvider === 'groq') effModel = 'llama-3.3-70b-versatile';
+              }
+              // Pri cileni na ZenMux dopln plne ID modelu i pro nazvy bez prefixu
+              if (effProvider === 'zenmux' && !effModel.includes('/')) {
+                const zid = effModel.toLowerCase();
+                if (zid.includes('opus-4')) effModel = 'anthropic/claude-opus-4.1';
+                else if (zid.includes('sonnet-4')) effModel = 'anthropic/claude-sonnet-4.5';
+                else if (zid.includes('3-5-sonnet')) effModel = 'anthropic/claude-sonnet-4.5';
+                else if (zid.includes('fable')) effModel = 'anthropic/claude-fable-5';
+                else if (zid.includes('deepseek')) effModel = 'deepseek/deepseek-v4.1-flash';
+                else if (zid.includes('qwen')) effModel = 'qwen/qwen3.8-max';
+                else effModel = 'anthropic/claude-fable-5';
               }
 
               if (effProvider === 'kimi') {
@@ -303,6 +322,9 @@ Máte dvě možnosti:
                 headers['Authorization'] = `Bearer ${effKey}`;
               } else if (effProvider === 'groq') {
                 targetUrl = 'https://api.groq.com/openai/v1/chat/completions';
+                headers['Authorization'] = `Bearer ${effKey}`;
+              } else if (effProvider === 'zenmux') {
+                targetUrl = 'https://zenmux.ai/api/v1/chat/completions';
                 headers['Authorization'] = `Bearer ${effKey}`;
               } else if (effProvider === 'ollama') {
                 const base = endpoint || 'http://localhost:11434/v1';

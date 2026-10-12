@@ -8,6 +8,7 @@
 
 // Klice ze serverovych env (Vercel -> Settings -> Environment Variables)
 const ENV_KEYS = {
+  zenmux: process.env.ZENMUX_API_KEY || '',
   openrouter: process.env.OPENROUTER_API_KEY || '',
   kimi: process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY || '',
   openai: process.env.OPENAI_API_KEY || '',
@@ -15,11 +16,20 @@ const ENV_KEYS = {
   groq: process.env.GROQ_API_KEY || '',
 };
 
-const DIRECT_PROVIDERS = ['openrouter', 'kimi', 'openai', 'deepseek', 'groq'];
+const DIRECT_PROVIDERS = ['zenmux', 'openrouter', 'kimi', 'openai', 'deepseek', 'groq'];
 
 // Prevod fcc/* modelu na prime modely poskytovatelu
 function mapFccModel(fccId, provider) {
   const id = String(fccId || '').toLowerCase();
+  if (provider === 'zenmux') {
+    if (id.includes('opus-4')) return 'anthropic/claude-opus-4.1';
+    if (id.includes('sonnet-4')) return 'anthropic/claude-sonnet-4.5';
+    if (id.includes('3-5-sonnet')) return 'anthropic/claude-sonnet-4.5';
+    if (id.includes('fable')) return 'anthropic/claude-fable-5';
+    if (id.includes('deepseek')) return 'deepseek/deepseek-v4.1-flash';
+    if (id.includes('qwen')) return 'qwen/qwen3.8-max';
+    return 'anthropic/claude-fable-5';
+  }
   if (provider === 'openrouter') {
     if (id.includes('opus-4')) return 'anthropic/claude-opus-4';
     if (id.includes('sonnet-4')) return 'anthropic/claude-sonnet-4';
@@ -42,10 +52,10 @@ function mapFccModel(fccId, provider) {
 const NO_KEY_MSG =
   '⚠️ **Neni nastaven zadny API klic!**\n\n' +
   'Mate dve moznosti:\n' +
-  '1. **Vlozit klic v aplikaci**: otevrete **Nastaveni** a vlozte svuj klic ' +
-  '(Kimi / OpenRouter / OpenAI / DeepSeek / Groq).\n' +
+  '1. **Vlozit klic v aplikaci**: otevrete **Nastaveni -> AI klice** a vlozte svuj klic ' +
+  '(ZenMux / Kimi / OpenRouter / OpenAI / DeepSeek / Groq).\n' +
   '2. **Prednastavit na Vercelu**: pridejte Environment Variable ' +
-  '(`OPENROUTER_API_KEY`, `KIMI_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY` nebo `GROQ_API_KEY`) ' +
+  '(`ZENMUX_API_KEY`, `OPENROUTER_API_KEY`, `KIMI_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY` nebo `GROQ_API_KEY`) ' +
   'v nastaveni projektu a redeploynete.\n\n' +
   'Modely `fcc/*` a lokalni funkce (disk, terminal) funguji jen pri spusteni na vlastnim pocitaci (`npm run dev` + `fcc-server`).';
 
@@ -117,6 +127,11 @@ export default async function handler(req, res) {
       }
     }
 
+    // Pri cileni na ZenMux dopln plne ID modelu i pro nazvy bez prefixu
+    if (effProvider === 'zenmux' && !effModel.includes('/')) {
+      effModel = mapFccModel(effModel, 'zenmux');
+    }
+
     const hasAnthropicOnly =
       !effKey && ((apiKeys && apiKeys.anthropic) || process.env.ANTHROPIC_API_KEY);
     if (hasAnthropicOnly) {
@@ -137,6 +152,9 @@ export default async function handler(req, res) {
 
     if (effProvider === 'kimi') {
       targetUrl = 'https://api.moonshot.cn/v1/chat/completions';
+      headers['Authorization'] = `Bearer ${effKey}`;
+    } else if (effProvider === 'zenmux') {
+      targetUrl = 'https://zenmux.ai/api/v1/chat/completions';
       headers['Authorization'] = `Bearer ${effKey}`;
     } else if (effProvider === 'openrouter') {
       targetUrl = 'https://openrouter.ai/api/v1/chat/completions';

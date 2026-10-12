@@ -152,6 +152,7 @@ export interface UserSettings {
     anthropic?: string;
     groq?: string;
     deepseek?: string;
+    zenmux?: string;
     custom?: string;
   };
   kimiEndpoint?: string;
