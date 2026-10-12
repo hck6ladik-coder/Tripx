@@ -105,13 +105,22 @@ export const MOCK_PROVIDERS: AIProvider[] = [
 
 export const MOCK_MODELS: AIModel[] = [
   {
-    id: 'fcc/claude-sonnet-4-20250514',
-    name: 'Claude Sonnet 4',
+    id: 'fcc/claude-fable-5',
+    name: 'Claude Fable 5',
     providerId: 'fcc',
     contextWindow: 200000,
     capabilities: ['chat', 'coding', 'tools', 'reasoning'],
     favorite: true,
     recent: true,
+  },
+  {
+    id: 'fcc/claude-sonnet-4-20250514',
+    name: 'Claude Sonnet 4',
+    providerId: 'fcc',
+    contextWindow: 200000,
+    capabilities: ['chat', 'coding', 'tools', 'reasoning'],
+    favorite: false,
+    recent: false,
   },
   {
     id: 'fcc/claude-opus-4-20250514',

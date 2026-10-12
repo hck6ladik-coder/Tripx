@@ -26,7 +26,7 @@ export function LoadingLockScreen() {
 
   const BOOT_STEPS = [
     { text: '🔑 Ověřování hesla 666... PŘÍSTUP POVOLEN!', icon: Flame, color: 'text-amber-400' },
-    { text: '⚡ Připojování k fcc-server (Claude Sonnet 4 na portu 8082)... ONLINE', icon: Cpu, color: 'text-accent' },
+    { text: '⚡ Připojování k fcc-server (Claude Fable 5 na portu 8082)... ONLINE', icon: Cpu, color: 'text-accent' },
     { text: '📂 Připojování lokálního pracovního prostoru d:/trip... PŘIPRAVENO', icon: Terminal, color: 'text-blue-400' },
     { text: '🧠 Aktivace Senior Software Architect & Programmer schopností... 100%', icon: Sparkles, color: 'text-purple-400' },
     { text: '🚀 Všechny subsystémy online! Vítej v TripxCZ-Twitch CodeSpace!', icon: CheckCircle2, color: 'text-emerald-400' },
@@ -350,7 +350,7 @@ export function LoadingLockScreen() {
         {/* Footer info */}
         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-text-secondary/60">
           <span>TripxCZ twitch.tv/tripxcz</span>
-          <span>Claude Sonnet 4 :8082</span>
+          <span>Claude Fable 5 :8082</span>
         </div>
       </div>
     </div>

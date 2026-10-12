@@ -563,7 +563,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'codespace-ai-storage',
-      version: 3,
+      version: 4,
       migrate: (persistedState: any) => {
         const validIds = new Set(MOCK_MODELS.map((m) => m.id));
         if (!persistedState?.selectedModel?.id || !validIds.has(persistedState.selectedModel.id)) {

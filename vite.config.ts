@@ -57,7 +57,7 @@ function codeSpaceBackendPlugin(): Plugin {
               const data = JSON.parse(body || '{}');
               const {
                 provider = 'fcc',
-                model = 'claude-sonnet-4-20250514',
+                model = 'claude-fable-5',
                 messages = [],
                 apiKey = '',
                 endpoint = '',
@@ -106,7 +106,7 @@ function codeSpaceBackendPlugin(): Plugin {
                 }
 
                 // Clean and normalize model name for fcc-server
-                let targetModel = model || 'claude-sonnet-4-20250514';
+                let targetModel = model || 'claude-fable-5';
                 if (targetModel.includes('fcc/')) {
                   targetModel = targetModel.replace(/^fcc\//, '');
                 } else if (targetModel.toLowerCase().includes('nemotron')) {
@@ -125,7 +125,7 @@ function codeSpaceBackendPlugin(): Plugin {
                     'anthropic-version': '2023-06-01',
                   },
                   body: JSON.stringify({
-                    model: targetModel || 'claude-sonnet-4-20250514',
+                    model: targetModel || 'claude-fable-5',
                     max_tokens: 4096,
                     system: systemPrompt || undefined,
                     messages: anthropicMessages,
